@@ -1,7 +1,10 @@
 function Serve(path) {
 	let serve = serves[path];
-	return new Response(serve.content, {
-		headers: serve.headers
+	let content = serve.content;
+	return new Response(content, {
+		headers: {
+			"content-type": serve.type
+		}
 	})
 }
 

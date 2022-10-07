@@ -11,6 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^18.0.6",
-    "node-fetch": "^3.2.6"
+    "chalk": "^5.1.0",
+    "mime-types": "^2.1.35",
+    "node-fetch": "^3.2.6",
+    "parse5": "^7.1.1"
   }
 }

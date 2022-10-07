@@ -1,6 +1,6 @@
 import { Blaze } from './blazesrc/index.mjs';
 import path from 'path';
 
-const blazeServer = new Blaze(path.resolve("./public"));
+const blazeServer = new Blaze("./public");
 
-Blaze.listen(8080);
+blazeServer.listen(8080, "0.0.0.0");
