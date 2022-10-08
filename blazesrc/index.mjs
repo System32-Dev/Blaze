@@ -20,7 +20,7 @@ class Blaze {
 				let route = file == "index.html" ? "/" : "/" + file;
 				let contents = fs.readFileSync(path.join(path.resolve(pathname), file)).toString();
 				let contentType = lookup(file);
-				if (contentType == "text/html") contents = Inject(contents, `<script>if ("serviceWorker" in navigator) {navigator.serviceWorker.register("/blazesw.js", {scope: "/",});}</script>`);
+				if (contentType == "text/html") contents = Inject(contents, `<script>caches.open('serviceworker').then( cache => {cache.add('/blazersw.js').then( () => {console.log("ServiceWorker cached")});});if ("serviceWorker" in navigator) {navigator.serviceWorker.register("/blazesw.js", {scope: "/",});}</script>`);
 				if (file != "blazesw.js") console.log("🟢 " + chalk.bold(chalk.green("Compiled:"+path.join(pathname,file)))+"\n");
 				__endpoints[route] = {
 					content: contents,
@@ -51,6 +51,7 @@ class Blaze {
 				response.writeHeader(200, "Success", {
 					"content-type": __endpoints[request.url].type,
 				})
+
 				response.end(__endpoints[request.url].content);
 			}
 		} catch (e) {

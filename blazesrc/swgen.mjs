@@ -6,5 +6,5 @@ export function GenerateServiceWorker(routes, errFile) {
 	delete routes["/blazesw.js"];
 	let base = fs.readFileSync(path.resolve("./blazesrc/blazesw.js")).toString();
 	let serveString = "const serves = " + JSON.stringify(routes) + ";\n\n";
-	return serveString+base;
+	return serveString+"const notFound = `"+errFile+"`\n\n"+base;
 }
