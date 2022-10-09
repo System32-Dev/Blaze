@@ -1,26 +1,25 @@
 {
   "name": "blaze",
   "version": "1.0.0",
-  "description": "make the internet faster",
+  "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "Lil Neutron",
-  "license": "GPL-3.0-or-later",
   "dependencies": {
-    "@types/node": "^18.0.6",
-    "chalk": "^5.1.0",
-    "mime-types": "^2.1.35",
-    "node-fetch": "^3.2.6",
-    "parse5": "^7.1.1"
+	"mime-types": "^2.1.35",
+    "parse5": "^7.1.1",
+    "chalk": "^5.1.0"
   },
   "devDependencies": {},
+  "scripts": {
+	  "start": "node index.js",
+      "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SmartCoder3000/Blaze.git"
   },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/SmartCoder3000/Blaze/issues"
   },

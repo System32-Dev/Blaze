@@ -1,10 +1,29 @@
 import { GenerateServiceWorker } from './swgen.mjs';
+import { lookup } from 'mime-types';
 import Inject from './inject.mjs';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
 import chalk from 'chalk';
-import { lookup } from 'mime-types';
+
+function CompileFile(file, __endpoints, pathname, showStatus) {
+	if (!showStatus) showStatus = true;
+	try {
+		let route = file == "index.html" ? "/" : "/" + file;
+		let contents = fs.readFileSync(path.join(path.resolve(pathname), file)).toString();
+		let contentType = lookup(file);
+		if (contentType == "text/html") contents = Inject(contents, `<script>caches.open('serviceworker').then( cache => {cache.add('/blazersw.js').then( () => {console.log("ServiceWorker cached")});});if ("serviceWorker" in navigator) {navigator.serviceWorker.register("/blazesw.js", {scope: "/",});}</script>`);
+		if (file != "blazesw.js" && showStatus) console.log("🟢 " + chalk.bold(chalk.green("Compiled:"+path.join(pathname,file)))+"\n");
+		__endpoints[route] = {
+			content: contents,
+			type: contentType,
+		}
+		return true;
+	} catch (e) {
+		if (showStatus) console.log("🔴" + chalk.red("Could Not Compile\n"));
+		return false;
+	}
+}
 
 class Blaze {
 	constructor(pathname, config) {
@@ -15,19 +34,17 @@ class Blaze {
 		
 		var __endpoints = {};
 		for (let i = 0; i < fs.readdirSync(this.path).length; i++) {
-			let file = fs.readdirSync(this.path)[i];
-			try {
-				let route = file == "index.html" ? "/" : "/" + file;
-				let contents = fs.readFileSync(path.join(path.resolve(pathname), file)).toString();
-				let contentType = lookup(file);
-				if (contentType == "text/html") contents = Inject(contents, `<script>caches.open('serviceworker').then( cache => {cache.add('/blazersw.js').then( () => {console.log("ServiceWorker cached")});});if ("serviceWorker" in navigator) {navigator.serviceWorker.register("/blazesw.js", {scope: "/",});}</script>`);
-				if (file != "blazesw.js") console.log("🟢 " + chalk.bold(chalk.green("Compiled:"+path.join(pathname,file)))+"\n");
-				__endpoints[route] = {
-					content: contents,
-					type: contentType,
+			var file = fs.readdirSync(this.path)[i];
+			let compiled = CompileFile(file, __endpoints, pathname);
+			if (compiled == true && config.watch == true) {
+				// Watch File
+				let watchedFile = file;
+				if (file != "blazesw.js") {
+					fs.watchFile(path.join(path.resolve(pathname), watchedFile), {interval:4000}, (...metaData) => {
+						CompileFile(watchedFile, __endpoints, pathname, false);
+						fs.writeFileSync(path.join(pathname, "blazesw.js"), GenerateServiceWorker(__endpoints));
+					})
 				}
-			} catch (e) {
-				console.log("🔴" + chalk.red("Could Not Compile\n"));
 			}
 		}
 		
