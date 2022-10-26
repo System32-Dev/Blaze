@@ -1,25 +1,33 @@
 import { GenerateServiceWorker } from './swgen.mjs';
 import { lookup } from 'mime-types';
 import Inject from './inject.mjs';
+import ManifestGen from './manifestgen.mjs';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
 import chalk from 'chalk';
 
-function CompileFile(file, __endpoints, pathname, showStatus) {
-	if (!showStatus) showStatus = true;
+function CompileFile(file, __endpoints, pathname, showStatus, config) {
+	if (showStatus == undefined) showStatus = true;
+	const encode = (data) => {
+    	let buf = Buffer.from(data);
+    	let base64 = buf.toString('base64');
+    	return base64
+  	}
 	try {
 		let route = file == "index.html" ? "/" : "/" + file;
 		let contents = fs.readFileSync(path.join(path.resolve(pathname), file)).toString();
 		let contentType = lookup(file);
-		if (contentType == "text/html") contents = Inject(contents, `<script>caches.open('serviceworker').then( cache => {cache.add('/blazersw.js').then( () => {console.log("ServiceWorker cached")});});if ("serviceWorker" in navigator) {navigator.serviceWorker.register("/blazesw.js", {scope: "/",});}</script>`);
-		if (file != "blazesw.js" && showStatus) console.log("🟢 " + chalk.bold(chalk.green("Compiled:"+path.join(pathname,file)))+"\n");
+		if (contentType.includes("image")) contents = encode(Buffer.from(contents, "utf-8"))
+		if (contentType == "text/html") contents = Inject(contents, `<script>if ("serviceWorker" in navigator) {navigator.serviceWorker.register("/blazesw.js", {scope: "/",}); }</script>`);
+		if ((file != "manifest.json" && file != "blazesw.js") && showStatus) console.log("🟢 " + chalk.bold(chalk.green("Compiled: "+path.join(pathname,file)))+"\n");
 		__endpoints[route] = {
 			content: contents,
 			type: contentType,
 		}
 		return true;
 	} catch (e) {
+		console.log(e);
 		if (showStatus) console.log("🔴" + chalk.red("Could Not Compile\n"));
 		return false;
 	}
@@ -35,13 +43,13 @@ class Blaze {
 		var __endpoints = {};
 		for (let i = 0; i < fs.readdirSync(this.path).length; i++) {
 			var file = fs.readdirSync(this.path)[i];
-			let compiled = CompileFile(file, __endpoints, pathname);
+			let compiled = CompileFile(file, __endpoints, pathname, config.PWA);
 			if (compiled == true && config.watch == true) {
 				// Watch File
 				let watchedFile = file;
 				if (file != "blazesw.js") {
 					fs.watchFile(path.join(path.resolve(pathname), watchedFile), {interval:4000}, (...metaData) => {
-						CompileFile(watchedFile, __endpoints, pathname, false);
+						CompileFile(watchedFile, __endpoints, pathname, false, config.PWA);
 						fs.writeFileSync(path.join(pathname, "blazesw.js"), GenerateServiceWorker(__endpoints));
 					})
 				}
@@ -58,18 +66,26 @@ class Blaze {
 		}
 
 		console.log(chalk.bold(chalk.hex("#e69500")("Compiling Done\n")));
+
+		//if (config.PWA) fs.writeFileSync(path.join(pathname, "manifest.json"), ManifestGen(pathname));
 	}
 
 	requestHandler(request, response, __endpoints) {
 		let route = request.url=="/"?"/index.html":request.url;
-
+	
 		try {
 			if (__endpoints[request.url]) {
 				response.writeHeader(200, "Success", {
 					"content-type": __endpoints[request.url].type,
 				})
-
 				response.end(__endpoints[request.url].content);
+			} else if (fs.existsSync(path.join(this.path, route))) {
+				response.writeHead(200, {
+                	"Content-Type": "application/octet-stream",
+	                "Content-Disposition": "attachment; filename=" + fileName
+            	});
+	            fs.createReadStream(path.join(this.path, route)).pipe(response);
+	            return;
 			}
 		} catch (e) {
 			response.writeHeader(404, "Not Found", {

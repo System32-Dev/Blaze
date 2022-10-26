@@ -1,24 +1,26 @@
 function Serve(path) {
 	let serve = serves[path];
-	return new Response(serve.content, {
-		status: 200,
-		statusText: "Success",
-		headers: {
-			"content-type": serve.type
-		}
-	})
+	if (serve) {
+		return new Response(serve.content, {
+			status: 200,
+			"status-text": "Success",
+			headers: {
+				"content-type": serve.type
+			}
+		})
+	}
+		
+	else {
+		return new Response(notFound, {
+			status: 404,
+			"status-text": "Not Found",
+			headers: {
+				"content-type": "text/html",
+			}
+		})
+	}
 }
 
 self.addEventListener("fetch", (event) => {
-	if (serves[new URL(event.request.url).pathname]) {
-		event.respondWith(Serve(new URL(event.request.url).pathname));
-	} /*else {
-		event.respondWith(new Response(notFound, {
-			status: 404,
-			statusText: "Not Found",
-			headers: {
-				"content-type": "text/html"
-			}
-		}));
-	}*/
-});
+	event.respondWith(Serve(new URL(event.request.url).pathname));
+})
