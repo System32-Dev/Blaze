@@ -1,0 +1,27 @@
+{
+  "name": "blaze",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "buffer-image-size": "^0.6.4",
+    "chalk": "^5.1.0",
+    "mime-types": "^2.1.35",
+    "parse5": "^7.1.1"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SmartCoder3000/Blaze.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SmartCoder3000/Blaze/issues"
+  },
+  "homepage": "https://github.com/SmartCoder3000/Blaze#readme"
+}
